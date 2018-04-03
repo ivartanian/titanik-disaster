@@ -4,3 +4,7 @@ h5py
 scikit-learn
 scipy
 tensorflow
+<<<<<<< 115933f6384070365fc2b3f8bbad746ea9cd7222
+=======
+
+>>>>>>> Init
