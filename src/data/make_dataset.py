@@ -26,5 +26,6 @@ print(passangers_children)
 passangers_adults = train["Survived"][train["Age"] >= 18].value_counts()
 print(passangers_adults)
 print("-------------------------CONVERT THE MALE AND FEMALE GROUPS TO INTEGER FORM----------------------------------")
-train["Sex"][train["Sex"] == "male"] = 0
-train["Sex"][train["Sex"] == "female"] = 1
+train.loc[train["Sex"] == "male", "Sex"] = 0
+train.loc[train["Sex"] == "female", "Sex"] = 1
+print(train.head())
