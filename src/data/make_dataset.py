@@ -1,4 +1,5 @@
 import pandas as pd
+from sklearn import tree
 
 pd.set_option('expand_frame_repr', False)
 pd.set_option('colheader_justify', 'center')
@@ -29,3 +30,20 @@ print("-------------------------CONVERT THE MALE AND FEMALE GROUPS TO INTEGER FO
 train.loc[train["Sex"] == "male", "Sex"] = 0
 train.loc[train["Sex"] == "female", "Sex"] = 1
 print(train.head())
+print("-------------------------IMPUTE THE EMBARKED VARIABLE AND CONVERT TO INTEGER FORM----------------------------------")
+train.loc["Embarked"] = train["Embarked"].fillna("S")
+train.loc[train["Embarked"] == "S", "Embarked"] = 0
+train.loc[train["Embarked"] == "C", "Embarked"] = 1
+train.loc[train["Embarked"] == "Q", "Embarked"] = 2
+print(train.head())
+
+pclass_num = train["Pclass"].value_counts()
+print(pclass_num)
+
+print("-------------------------CREATE THE TARGET AND FEATURES NUMPY ARRAYS: TARGET, FEATURES_ONE----------------------------------")
+target = train["Survived"].values
+features_one = train[["Pclass", "Sex", "Age", "Fare"]].values
+my_tree_one = tree.DecisionTreeClassifier()
+my_tree_one = my_tree_one.fit(features_one,target)
+print(my_tree_one.feature_importances_)
+print(my_tree_one.score(features_one,target))
