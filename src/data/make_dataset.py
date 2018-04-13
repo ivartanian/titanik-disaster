@@ -26,6 +26,11 @@ passangers_children = train["Survived"][train["Age"] < 18].value_counts()
 print(passangers_children)
 passangers_adults = train["Survived"][train["Age"] >= 18].value_counts()
 print(passangers_adults)
+print("-------------------------Count and drop NA Values----------------------------------")
+age_unique = train.Age.unique()
+print(age_unique)
+age_count_unique = train.Age.value_counts(dropna=False)
+print(age_count_unique)
 print("-------------------------CONVERT THE MALE AND FEMALE GROUPS TO INTEGER FORM----------------------------------")
 train.loc[train["Sex"] == "male", "Sex"] = 0
 train.loc[train["Sex"] == "female", "Sex"] = 1
