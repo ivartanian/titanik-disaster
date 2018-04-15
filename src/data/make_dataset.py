@@ -1,4 +1,5 @@
 import pandas as pd
+from numpy import float32
 from sklearn import tree
 
 pd.set_option('expand_frame_repr', False)
@@ -11,8 +12,9 @@ print("-------------------------SHAPE----------------------------------")
 print(train.shape)
 print("-------------------------COLUMNS----------------------------------")
 print(train.columns)
-print("-------------------------COLUMN NAMES AND TYPES----------------------------------")
+print("-------------------------COLUMN NAMES, TYPES AND INFO----------------------------------")
 print(train.dtypes)
+print(train.info())
 print("-------------------------PASSENGERS THAT SURVIVED VS PASSENGERS THAT PASSED AWAY AND PERCENTAGE----------------------------------")
 survived_num = train["Survived"].value_counts()
 print(survived_num)
@@ -26,17 +28,14 @@ passangers_children = train["Survived"][train["Age"] < 18].value_counts()
 print(passangers_children)
 passangers_adults = train["Survived"][train["Age"] >= 18].value_counts()
 print(passangers_adults)
-print("-------------------------Count and drop NA Values----------------------------------")
-age_unique = train.Age.unique()
-print(age_unique)
-age_count_unique = train.Age.value_counts(dropna=False)
-print(age_count_unique)
+print("-------------------------DROP NA VALUES----------------------------------")
+train = train.dropna( subset = ["Pclass", "Sex", "Age", "Fare", "Survived"], how = 'any')
 print("-------------------------CONVERT THE MALE AND FEMALE GROUPS TO INTEGER FORM----------------------------------")
 train.loc[train["Sex"] == "male", "Sex"] = 0
 train.loc[train["Sex"] == "female", "Sex"] = 1
 print(train.head())
 print("-------------------------IMPUTE THE EMBARKED VARIABLE AND CONVERT TO INTEGER FORM----------------------------------")
-train.loc["Embarked"] = train["Embarked"].fillna("S")
+train["Embarked"] = train["Embarked"].fillna("S")
 train.loc[train["Embarked"] == "S", "Embarked"] = 0
 train.loc[train["Embarked"] == "C", "Embarked"] = 1
 train.loc[train["Embarked"] == "Q", "Embarked"] = 2
@@ -44,7 +43,18 @@ print(train.head())
 
 pclass_num = train["Pclass"].value_counts()
 print(pclass_num)
-
+print("-------------------------DATA INFO----------------------------------")
+print(train.info())
+print("-------------------------CHANGE DATA TYPE----------------------------------")
+train['PassengerId'] = train.PassengerId.astype(float32)
+train['Survived'] = train.Survived.astype(float32)
+train['Pclass'] = train.Pclass.astype(float32)
+train['Sex'] = train.Sex.astype(float32)
+train['Age'] = train.Age.astype(float32)
+train['SibSp'] = train.SibSp.astype(float32)
+train['Parch'] = train.Parch.astype(float32)
+train['Fare'] = train.Fare.astype(float32)
+print(train.info())
 print("-------------------------CREATE THE TARGET AND FEATURES NUMPY ARRAYS: TARGET, FEATURES_ONE----------------------------------")
 target = train["Survived"].values
 features_one = train[["Pclass", "Sex", "Age", "Fare"]].values
