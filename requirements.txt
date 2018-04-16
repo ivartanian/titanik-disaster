@@ -6,3 +6,4 @@ scipy
 tensorflow
 click
 pandas
+plotly
