@@ -1,9 +1,9 @@
 import pandas as pd
 from numpy import float32
 from sklearn import tree
-import plotly.plotly as py
-import plotly.graph_objs as go
-from plotly import figure_factory as FF
+from sklearn.linear_model import LogisticRegression
+from sklearn import model_selection
+from sklearn.ensemble import RandomForestClassifier
 
 pd.set_option('expand_frame_repr', False)
 pd.set_option('colheader_justify', 'center')
@@ -17,6 +17,11 @@ print("-------------------------COLUMNS----------------------------------")
 print(train.columns)
 print("-------------------------COLUMN NAMES, TYPES AND INFO----------------------------------")
 print(train.dtypes)
+print(train.info())
+print(train.describe())
+print("-------------------------MISSING DATA - AGE,EMBARKED----------------------------------")
+train['Age'] = train['Age'].fillna(train['Age'].median())
+train["Embarked"] = train["Embarked"].fillna("S")
 print(train.info())
 print("-------------------------PASSENGERS THAT SURVIVED VS PASSENGERS THAT PASSED AWAY AND PERCENTAGE----------------------------------")
 survived_num = train["Survived"].value_counts()
@@ -42,27 +47,18 @@ pclass_gender_survival_count_df = train.groupby( ['Pclass', 'Sex'] )['Survived']
 print(pclass_gender_survival_count_df)
 pclass_age_gender_survival_df = pclass_gender_age_mean_df.merge(pclass_gender_survival_count_df, on = ['Pclass', 'Sex'])
 print(pclass_age_gender_survival_df)
-print("-------------------------WHO WAS MORE LIKELY TO SURVIVE FEMALE OR MALE?----------------------------------")
-# Normalized male survival
-male_survival = train["Survived"][train["Sex"] == 'male'].value_counts(normalize = True)
-# Normalized female survival
-female_survival = train["Survived"][train["Sex"] == 'female'].value_counts(normalize = True)
-
-# Survival by Sex
-x0 = ['male', 'female']
-y0 = [male_survival[1], female_survival[1]]
-data = [go.Bar(x=x0, y=y0)]
-layout = go.Layout(autosize = False, width = 300, height = 400,
-              yaxis = dict(title = 'Survival Rates'),
-              title = 'Survival by Sex')
-fig1 = go.Figure(data = data, layout = layout)
-py.iplot(fig1)
+print("-------------------------CROSS TABULATION BETWEEN GENDER AND SURVIVED----------------------------------")
+print(pd.crosstab(train.Sex, train.Survived))
+print(pd.crosstab(train.Sex, train.Survived, normalize="index"))
+print(pd.crosstab(train.Sex, train.Survived, normalize="columns"))
+print(pd.crosstab(train.Sex, train.Survived, normalize="all"))
+print(pd.crosstab([train.Embarked, train.Sex], train.Survived))
+print(pd.crosstab([train.Pclass, train.Sex], train.Survived, normalize="index"))
 print("-------------------------CONVERT THE MALE AND FEMALE GROUPS TO INTEGER FORM----------------------------------")
 train.loc[train["Sex"] == "male", "Sex"] = 0
 train.loc[train["Sex"] == "female", "Sex"] = 1
 print(train.head())
-print("-------------------------IMPUTE THE EMBARKED VARIABLE AND CONVERT TO INTEGER FORM----------------------------------")
-train["Embarked"] = train["Embarked"].fillna("S")
+print("-------------------------EMBARKED CONVERT TO INTEGER FORM----------------------------------")
 train.loc[train["Embarked"] == "S", "Embarked"] = 0
 train.loc[train["Embarked"] == "C", "Embarked"] = 1
 train.loc[train["Embarked"] == "Q", "Embarked"] = 2
@@ -81,10 +77,21 @@ train['Fare'] = train.Fare.astype(float32)
 print(train.info())
 print("-------------------------ONLY AGE, SEX AND PCLASS OF PASSENGERS WHO HAVE SURVIVED----------------------------------")
 print(train[ ( train.Survived == 1 ) & ( train.Age <= 5 ) ][['Age', 'Sex', 'Pclass']][0:5])
-print("-------------------------CREATE THE TARGET AND FEATURES NUMPY ARRAYS: TARGET, FEATURES_ONE----------------------------------")
-target = train["Survived"].values
-features_one = train[["Pclass", "Sex", "Age", "Fare"]].values
+print("-------------------------DECISION TREE----------------------------------")
+predictors = ["Pclass", "Sex", "Age", "SibSp", "Parch", "Fare", "Embarked"]
 my_tree_one = tree.DecisionTreeClassifier()
-my_tree_one = my_tree_one.fit(features_one,target)
-print(my_tree_one.feature_importances_)
-print(my_tree_one.score(features_one,target))
+my_tree_one.fit(train[predictors],train["Survived"])
+scores = model_selection.cross_val_score(my_tree_one, train[predictors], train["Survived"], cv=model_selection.KFold(train.shape[0], random_state=1))
+print("Accuracy and the 95% confidence interval of the estimate are: {0:.3f} (+/- {0:.2f})".format(scores.mean(), scores.std() * 2))
+print("-------------------------LOGISTIC REGRESSION----------------------------------")
+predictors = ["Pclass", "Sex", "Age", "SibSp", "Parch", "Fare", "Embarked"]
+logreg = LogisticRegression(random_state=1)
+scores = model_selection.cross_val_score(logreg, train[predictors], train["Survived"], cv=3)
+print("Accuracy and the 95% confidence interval of the estimate are: {0:.3f} (+/- {0:.2f})".format(scores.mean(), scores.std() * 2))
+print("-------------------------RANDOM FOREST----------------------------------")
+predictors = ["Pclass", "Sex", "Age", "SibSp", "Parch", "Fare", "Embarked"]
+forest = RandomForestClassifier(max_depth = 10, min_samples_split=2, n_estimators = 25, random_state = 1)
+forest.fit( train[predictors], train["Survived"])
+feature_importances = forest.feature_importances_
+scores = model_selection.cross_val_score(forest, train[predictors], train["Survived"], cv=model_selection.KFold(train.shape[0], random_state=1))
+print("Accuracy and the 95% confidence interval of the estimate are: {0:.3f} (+/- {0:.2f})".format(scores.mean(), scores.std() * 2))
