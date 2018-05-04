@@ -4,6 +4,7 @@ from sklearn import tree
 from sklearn.linear_model import LogisticRegression
 from sklearn import model_selection
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.preprocessing import LabelEncoder
 
 pd.set_option('expand_frame_repr', False)
 pd.set_option('colheader_justify', 'center')
@@ -57,6 +58,20 @@ print(pd.crosstab(train.Sex, train.Survived, margins=True, normalize="columns"))
 print(pd.crosstab(train.Sex, train.Survived, margins=True, normalize="all"))
 print(pd.crosstab([train.Embarked, train.Sex], train.Survived, margins=True))
 print(pd.crosstab([train.Pclass, train.Sex], train.Survived, normalize="index"))
+print("-------------------------PREPROCESSING DATA----------------------------------")
+MaxPassEmbarked = train.groupby('Embarked').count()['PassengerId']
+train.Embarked[train.Embarked.isnull()] = MaxPassEmbarked[MaxPassEmbarked == MaxPassEmbarked.max()].index[0]
+
+label = LabelEncoder()
+dicts = {}
+
+label.fit(train.Sex.drop_duplicates())
+dicts['Sex'] = list(label.classes_)
+train.Sex = label.transform(train.Sex)
+
+# label.fit(train.Embarked.drop_duplicates())
+# dicts['Embarked'] = list(label.classes_)
+# train.Embarked = label.transform(train.Embarked)
 print("-------------------------CONVERT THE MALE AND FEMALE GROUPS TO INTEGER FORM----------------------------------")
 train.loc[train["Sex"] == "male", "Sex"] = 0
 train.loc[train["Sex"] == "female", "Sex"] = 1
